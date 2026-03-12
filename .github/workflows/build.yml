@@ -13,27 +13,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Detect project
-        run: |
-          PROJECT=$(ls *.xcodeproj | head -n 1)
-          echo "PROJECT=$PROJECT" >> $GITHUB_ENV
-          echo "Project: $PROJECT"
+      - name: Show files
+        run: ls
 
-      - name: Detect target
-        run: |
-          TARGET=$(xcodebuild -list -project "$PROJECT" | grep -A1 "Targets:" | tail -n1 | xargs)
-          echo "TARGET=$TARGET" >> $GITHUB_ENV
-          echo "Target: $TARGET"
-
-      - name: Build archive (unsigned)
+      - name: Build archive
         run: |
           xcodebuild \
-          -project "$PROJECT" \
-          -target "$TARGET" \
+          -project NativeQR.xcodeproj \
+          -scheme NativeQR \
           -configuration Release \
           -sdk iphoneos \
           -destination 'generic/platform=iOS' \
-          -archivePath build/App.xcarchive \
+          -archivePath build/NativeQR.xcarchive \
           archive \
           CODE_SIGNING_ALLOWED=NO \
           CODE_SIGNING_REQUIRED=NO \
@@ -42,11 +33,11 @@ jobs:
       - name: Create IPA
         run: |
           mkdir Payload
-          cp -r build/App.xcarchive/Products/Applications/*.app Payload/
-          zip -r App.ipa Payload
+          cp -r build/NativeQR.xcarchive/Products/Applications/*.app Payload/
+          zip -r NativeQR.ipa Payload
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: ios-ipa
-          path: App.ipa
+          path: NativeQR.ipa
