@@ -1,3 +1,4 @@
+import SwiftUI
 import Foundation
 import AVFoundation
 
@@ -145,18 +146,20 @@ final class QRScannerViewModel: NSObject, ObservableObject {
     }
 
     func resetAndResume() {
-        withAnimation(.snappy(duration: 0.3)) {
+        withAnimation(Animation.snappy(duration: 0.3)) {
             lastCapture = nil
         }
         start()
     }
 
+    @MainActor
     func handleImportedPayload(_ payload: String, symbology: String = "Image") {
         let parsed = QRPayloadParser.parse(payload)
         lastCapture = ScanCapture(payload: payload, symbology: symbology, parsed: parsed, date: Date())
         Haptics.shared.success()
     }
 
+    @MainActor
     func toggleTorch() {
         guard let device = videoInput?.device, device.hasTorch else { return }
         do {
