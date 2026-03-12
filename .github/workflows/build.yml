@@ -10,34 +10,38 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Show files
-        run: ls
+      - name: Show Xcode version
+        run: xcodebuild -version
 
-      - name: Build archive
+      - name: Build archive (NO SIGNING)
         run: |
           xcodebuild \
           -project NativeQR.xcodeproj \
           -scheme NativeQR \
           -configuration Release \
           -sdk iphoneos \
-          -destination 'generic/platform=iOS' \
           -archivePath build/NativeQR.xcarchive \
           archive \
           CODE_SIGNING_ALLOWED=NO \
           CODE_SIGNING_REQUIRED=NO \
           CODE_SIGN_IDENTITY=""
 
-      - name: Create IPA
+      - name: Create Payload
         run: |
           mkdir Payload
           cp -r build/NativeQR.xcarchive/Products/Applications/*.app Payload/
+
+      - name: Zip IPA
+        run: |
           zip -r NativeQR.ipa Payload
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: ios-ipa
-          path: NativeQR.ipa
+          name: ipa-build
+          path: |
+            NativeQR.ipa
+            build/
