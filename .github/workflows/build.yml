@@ -10,43 +10,42 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Show Xcode version
-        run: xcodebuild -version
+      - name: Detect project
+        run: |
+          PROJECT=$(ls *.xcodeproj | head -n 1)
+          echo "PROJECT=$PROJECT" >> $GITHUB_ENV
+
+      - name: Detect scheme
+        run: |
+          SCHEME=$(xcodebuild -list -project "$PROJECT" | grep -A1 "Schemes:" | tail -n1 | xargs)
+          echo "SCHEME=$SCHEME" >> $GITHUB_ENV
+          echo "Using scheme: $SCHEME"
 
       - name: Build archive (unsigned)
         run: |
           xcodebuild \
-            -project NativeQR.xcodeproj \
-            -scheme NativeQR \
-            -configuration Release \
-            -sdk iphoneos \
-            -destination 'generic/platform=iOS' \
-            -archivePath build/NativeQR.xcarchive \
-            archive \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
-
-      - name: Create Payload folder
-        run: |
-          mkdir Payload
-          cp -r build/NativeQR.xcarchive/Products/Applications/*.app Payload/
+          -project "$PROJECT" \
+          -scheme "$SCHEME" \
+          -configuration Release \
+          -sdk iphoneos \
+          -destination 'generic/platform=iOS' \
+          -archivePath build/App.xcarchive \
+          archive \
+          CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGN_IDENTITY=""
 
       - name: Create IPA
         run: |
-          zip -r NativeQR.ipa Payload
+          mkdir Payload
+          cp -r build/App.xcarchive/Products/Applications/*.app Payload/
+          zip -r App.ipa Payload
 
-      - name: Create TIPA
-        run: |
-          cp NativeQR.ipa NativeQR.tipa
-
-      - name: Upload artifacts
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: ios-build
-          path: |
-            NativeQR.ipa
-            NativeQR.tipa
+          name: ios-ipa
+          path: App.ipa
