@@ -17,18 +17,19 @@ jobs:
         run: |
           PROJECT=$(ls *.xcodeproj | head -n 1)
           echo "PROJECT=$PROJECT" >> $GITHUB_ENV
+          echo "Project: $PROJECT"
 
-      - name: Detect scheme
+      - name: Detect target
         run: |
-          SCHEME=$(xcodebuild -list -project "$PROJECT" | grep -A1 "Schemes:" | tail -n1 | xargs)
-          echo "SCHEME=$SCHEME" >> $GITHUB_ENV
-          echo "Using scheme: $SCHEME"
+          TARGET=$(xcodebuild -list -project "$PROJECT" | grep -A1 "Targets:" | tail -n1 | xargs)
+          echo "TARGET=$TARGET" >> $GITHUB_ENV
+          echo "Target: $TARGET"
 
       - name: Build archive (unsigned)
         run: |
           xcodebuild \
           -project "$PROJECT" \
-          -scheme "$SCHEME" \
+          -target "$TARGET" \
           -configuration Release \
           -sdk iphoneos \
           -destination 'generic/platform=iOS' \
